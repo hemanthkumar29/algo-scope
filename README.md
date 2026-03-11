@@ -197,3 +197,4 @@ Set the environment variable `NEXT_PUBLIC_API_URL` to your deployed backend URL.
 - Complex algorithms with multiple branches may not be fully captured
 - Amortized complexity is not currently distinguished from worst-case
 - Dynamic programming pattern detection is limited to memoization suggestions
+# algo-scope
