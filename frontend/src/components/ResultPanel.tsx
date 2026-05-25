@@ -11,8 +11,10 @@ import {
   Zap,
   TrendingUp,
   BarChart3,
+  Gauge,
 } from 'lucide-react';
 import type { AnalysisResult } from '@/lib/types';
+import ComplexityBadge from './ComplexityBadge';
 
 interface Props {
   result: AnalysisResult;
@@ -39,22 +41,30 @@ export default function ResultPanel({ result }: Props) {
       animate="show"
       className="space-y-4"
     >
-      {/* Complexity badges */}
-      <motion.div variants={item} className="grid grid-cols-2 gap-3">
-        <ComplexityCard
-          icon={<Clock size={16} />}
-          label="Time Complexity"
-          notation={result.time_complexity}
-          sublabel={result.time_label}
-          color="indigo"
-        />
-        <ComplexityCard
-          icon={<HardDrive size={16} />}
-          label="Space Complexity"
-          notation={result.space_complexity}
-          sublabel={result.space_label}
-          color="emerald"
-        />
+      {/* Score gauge + Complexity badges row */}
+      <motion.div variants={item} className="grid grid-cols-[auto_1fr] gap-4">
+        {/* Score gauge */}
+        <div className="flex items-center justify-center rounded-xl border border-border bg-surface-1 px-4 py-3">
+          <ComplexityBadge complexity={result.time_complexity} />
+        </div>
+
+        {/* Complexity cards */}
+        <div className="flex flex-col gap-3">
+          <ComplexityCard
+            icon={<Clock size={16} />}
+            label="Time Complexity"
+            notation={result.time_complexity}
+            sublabel={result.time_label}
+            color="indigo"
+          />
+          <ComplexityCard
+            icon={<HardDrive size={16} />}
+            label="Space Complexity"
+            notation={result.space_complexity}
+            sublabel={result.space_label}
+            color="emerald"
+          />
+        </div>
       </motion.div>
 
       {/* Analysis details */}
@@ -84,9 +94,9 @@ export default function ResultPanel({ result }: Props) {
             Case Analysis
           </h3>
           <div className="space-y-2">
-            <CaseRow label="Best" notation={result.cases.best.notation} desc={result.cases.best.description} color="text-emerald-400" />
-            <CaseRow label="Average" notation={result.cases.average.notation} desc={result.cases.average.description} color="text-amber-400" />
-            <CaseRow label="Worst" notation={result.cases.worst.notation} desc={result.cases.worst.description} color="text-red-400" />
+            <CaseRow label="Best" notation={result.cases.best.notation} desc={result.cases.best.description} color="text-emerald-400" dotColor="bg-emerald-400" />
+            <CaseRow label="Average" notation={result.cases.average.notation} desc={result.cases.average.description} color="text-amber-400" dotColor="bg-amber-400" />
+            <CaseRow label="Worst" notation={result.cases.worst.notation} desc={result.cases.worst.description} color="text-red-400" dotColor="bg-red-400" />
           </div>
         </div>
       </motion.div>
@@ -114,8 +124,11 @@ export default function ResultPanel({ result }: Props) {
             </h3>
             <div className="space-y-2">
               {result.step_by_step.map((step, i) => (
-                <div
+                <motion.div
                   key={i}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.05 }}
                   className="flex items-start gap-3 rounded-lg bg-surface-2/50 px-3 py-2"
                 >
                   <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-accent/10 text-[10px] font-bold text-accent">
@@ -127,10 +140,12 @@ export default function ResultPanel({ result }: Props) {
                     </p>
                     <div className="mt-0.5 flex items-center gap-2 text-xs text-text-tertiary">
                       <span>Line {step.line}</span>
-                      <span className="text-accent">{step.complexity}</span>
+                      <span className="rounded-full bg-accent/10 px-1.5 py-0.5 text-[10px] font-semibold text-accent">
+                        {step.complexity}
+                      </span>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
@@ -146,7 +161,13 @@ export default function ResultPanel({ result }: Props) {
           </h3>
           <div className="space-y-2.5">
             {result.suggestions.map((suggestion, i) => (
-              <div key={i} className="group">
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.05 }}
+                className="group"
+              >
                 <div className="flex items-center gap-2">
                   <ChevronRight
                     size={12}
@@ -164,7 +185,7 @@ export default function ResultPanel({ result }: Props) {
                 <p className="ml-5 mt-0.5 text-xs leading-relaxed text-text-tertiary">
                   {suggestion.description}
                 </p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -197,7 +218,7 @@ function ComplexityCard({
 
   return (
     <div
-      className={`rounded-xl border bg-gradient-to-br p-4 ${colorClasses[color]}`}
+      className={`rounded-xl border bg-gradient-to-br p-3.5 ${colorClasses[color]} card-hover`}
     >
       <div className="flex items-center gap-2 text-text-tertiary">
         {icon}
@@ -205,10 +226,10 @@ function ComplexityCard({
           {label}
         </span>
       </div>
-      <div className={`mt-2 text-2xl font-bold ${textClasses[color]}`}>
+      <div className={`mt-1.5 text-xl font-bold ${textClasses[color]}`}>
         {notation}
       </div>
-      <div className="mt-0.5 text-xs text-text-tertiary">{sublabel}</div>
+      <div className="mt-0.5 text-[11px] text-text-tertiary">{sublabel}</div>
     </div>
   );
 }
@@ -223,7 +244,7 @@ function MiniStat({
   value: string;
 }) {
   return (
-    <div className="rounded-lg border border-border bg-surface-1 px-3 py-2.5 text-center">
+    <div className="rounded-lg border border-border bg-surface-1 px-3 py-2.5 text-center card-hover">
       <div className="flex items-center justify-center gap-1 text-text-tertiary">
         {icon}
         <span className="text-[10px] font-medium uppercase tracking-wider">
@@ -237,10 +258,13 @@ function MiniStat({
   );
 }
 
-function CaseRow({ label, notation, desc, color }: { label: string; notation: string; desc: string; color: string }) {
+function CaseRow({ label, notation, desc, color, dotColor }: { label: string; notation: string; desc: string; color: string; dotColor: string }) {
   return (
     <div className="flex items-center gap-3">
-      <span className={`w-14 text-xs font-medium ${color}`}>{label}</span>
+      <div className="flex items-center gap-2 w-16">
+        <div className={`h-1.5 w-1.5 rounded-full ${dotColor}`} />
+        <span className={`text-xs font-medium ${color}`}>{label}</span>
+      </div>
       <span className="text-sm font-semibold text-text-primary">{notation}</span>
       <span className="text-xs text-text-tertiary">— {desc}</span>
     </div>

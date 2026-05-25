@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useState } from 'react';
 import Editor, { OnMount } from '@monaco-editor/react';
 import { useTheme } from './ThemeProvider';
 import type { Language } from './LanguageSelector';
@@ -91,10 +91,22 @@ export default function CodeEditor({
   const { theme } = useTheme();
   const editorRef = useRef<any>(null);
   const decorationsRef = useRef<string[]>([]);
+  const [cursorPos, setCursorPos] = useState({ line: 1, col: 1 });
+
+  const lineCount = code.split('\n').length;
+  const charCount = code.length;
 
   const handleEditorMount: OnMount = useCallback(
     (editor, monaco) => {
       editorRef.current = editor;
+
+      // Track cursor position
+      editor.onDidChangeCursorPosition((e: any) => {
+        setCursorPos({
+          line: e.position.lineNumber,
+          col: e.position.column,
+        });
+      });
 
       // Define custom dark theme
       monaco.editor.defineTheme('algo-dark', {
@@ -227,6 +239,23 @@ export default function CodeEditor({
           </div>
         }
       />
+      {/* Status bar */}
+      <div className="flex items-center justify-between border-t border-border/50 bg-surface-1 px-3 py-1">
+        <div className="flex items-center gap-3 text-[10px] text-text-tertiary">
+          <span>
+            Ln {cursorPos.line}, Col {cursorPos.col}
+          </span>
+          <span className="h-2.5 w-px bg-border" />
+          <span>{lineCount} lines</span>
+          <span className="h-2.5 w-px bg-border" />
+          <span>{charCount.toLocaleString()} chars</span>
+        </div>
+        <div className="flex items-center gap-2 text-[10px] text-text-tertiary">
+          <span>{language.label}</span>
+          <span className="h-2.5 w-px bg-border" />
+          <span className="opacity-60">UTF-8</span>
+        </div>
+      </div>
     </div>
   );
 }

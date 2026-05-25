@@ -12,6 +12,7 @@ import {
   ResponsiveContainer,
   Area,
   AreaChart,
+  ReferenceLine,
 } from 'recharts';
 import type { AnalysisResult } from '@/lib/types';
 
@@ -127,8 +128,8 @@ function GrowthChart({ result }: Props) {
         <AreaChart data={result.graph_points}>
           <defs>
             <linearGradient id="growthGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={color} stopOpacity={0.2} />
-              <stop offset="95%" stopColor={color} stopOpacity={0} />
+              <stop offset="5%" stopColor={color} stopOpacity={0.25} />
+              <stop offset="95%" stopColor={color} stopOpacity={0.02} />
             </linearGradient>
           </defs>
           <CartesianGrid
@@ -164,9 +165,11 @@ function GrowthChart({ result }: Props) {
             contentStyle={{
               backgroundColor: 'var(--surface-2)',
               border: '1px solid var(--border)',
-              borderRadius: '8px',
+              borderRadius: '12px',
               fontSize: '12px',
               color: 'var(--text-primary)',
+              backdropFilter: 'blur(12px)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
             }}
             formatter={(value: number) => [formatAxis(value), 'Operations']}
             labelFormatter={(label) => `n = ${label}`}
@@ -175,7 +178,7 @@ function GrowthChart({ result }: Props) {
             type="monotone"
             dataKey="operations"
             stroke={color}
-            strokeWidth={2}
+            strokeWidth={2.5}
             fill="url(#growthGradient)"
             animationDuration={1200}
             animationEasing="ease-out"
@@ -194,6 +197,8 @@ function GrowthChart({ result }: Props) {
 }
 
 function ComparisonChart({ result }: Props) {
+  const yourColor = COMPLEXITY_COLORS[result.time_complexity] || '#6366f1';
+
   return (
     <div className="h-[280px]">
       <ResponsiveContainer width="100%" height="100%">
@@ -221,13 +226,15 @@ function ComparisonChart({ result }: Props) {
             contentStyle={{
               backgroundColor: 'var(--surface-2)',
               border: '1px solid var(--border)',
-              borderRadius: '8px',
+              borderRadius: '12px',
               fontSize: '11px',
               color: 'var(--text-primary)',
+              backdropFilter: 'blur(12px)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
             }}
             formatter={(value: number, name: string) => [
               formatAxis(value),
-              name,
+              name === result.time_complexity ? `${name} ← Your Algorithm` : name,
             ]}
             labelFormatter={(label) => `n = ${label}`}
           />
@@ -241,9 +248,16 @@ function ComparisonChart({ result }: Props) {
                 complexity === result.time_complexity ? 3 : 1.5
               }
               strokeOpacity={
-                complexity === result.time_complexity ? 1 : 0.35
+                complexity === result.time_complexity ? 1 : 0.3
               }
-              dot={false}
+              strokeDasharray={
+                complexity === result.time_complexity ? undefined : '4 4'
+              }
+              dot={
+                complexity === result.time_complexity
+                  ? { r: 3, fill: yourColor, stroke: yourColor }
+                  : false
+              }
               animationDuration={1000}
             />
           ))}
@@ -263,9 +277,20 @@ function ComparisonChart({ result }: Props) {
           >
             <div
               className="h-2 w-2 rounded-full"
-              style={{ backgroundColor: COMPLEXITY_COLORS[c] }}
+              style={{
+                backgroundColor: COMPLEXITY_COLORS[c],
+                boxShadow:
+                  c === result.time_complexity
+                    ? `0 0 6px ${COMPLEXITY_COLORS[c]}60`
+                    : 'none',
+              }}
             />
             {c}
+            {c === result.time_complexity && (
+              <span className="rounded bg-accent/10 px-1 py-0.5 text-[9px] font-semibold text-accent">
+                YOU
+              </span>
+            )}
           </div>
         ))}
       </div>
@@ -310,7 +335,7 @@ function SimulationTable({ result }: Props) {
                   <div className="flex items-center justify-end gap-2">
                     <div className="h-1.5 overflow-hidden rounded-full bg-surface-3" style={{ width: '80px' }}>
                       <motion.div
-                        className="h-full rounded-full bg-accent"
+                        className="h-full rounded-full bg-gradient-to-r from-accent to-purple-500"
                         initial={{ width: 0 }}
                         animate={{
                           width: `${Math.min(100, (row.operations / (result.simulation_table[result.simulation_table.length - 1]?.operations || 1)) * 100)}%`,
